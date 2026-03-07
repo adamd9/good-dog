@@ -283,7 +283,7 @@ socket.on('monitoring-state', (data) => {
 socket.on('recording-saved', (data) => {
   // Add the new recording to the select
   const opt = document.createElement('option');
-  opt.value = data.path.split('/').pop();
+  opt.value = data.path.replace(/^.*[/\\]/, '');
   opt.textContent = opt.value.replace('.wav', '').replace('_', ' ');
   recordingSelect.appendChild(opt);
 });

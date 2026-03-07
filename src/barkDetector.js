@@ -10,6 +10,9 @@
  */
 'use strict';
 
+/** Maximum absolute value of a 16-bit signed integer sample. */
+const INT16_MAX = 32768;
+
 class BarkDetector {
   /**
    * @param {object} options
@@ -112,7 +115,7 @@ class BarkDetector {
 
     const float32 = new Float32Array(int16.length);
     for (let i = 0; i < int16.length; i++) {
-      float32[i] = int16[i] / 32768;
+      float32[i] = int16[i] / INT16_MAX;
     }
     return float32;
   }

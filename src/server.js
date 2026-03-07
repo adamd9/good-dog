@@ -17,6 +17,7 @@ const fs = require('fs');
 const express = require('express');
 const { Server: SocketIOServer } = require('socket.io');
 const { v4: uuidv4 } = require('uuid');
+const rateLimit = require('express-rate-limit');
 
 const config = require('./config');
 const BarkDetector = require('./barkDetector');
@@ -69,7 +70,17 @@ const io = new SocketIOServer(server);
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '..', 'public')));
 
-// ─── REST API ─────────────────────────────────────────────────────────────────
+// ─── Rate limiter for file-serving endpoints ──────────────────────────────────
+
+/** Limits audio file downloads to 60 requests per minute per IP. */
+const audioFileLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 60,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests' },
+});
+
 
 /**
  * GET /api/status
@@ -135,7 +146,7 @@ app.get('/api/events/:id', (req, res) => {
  * GET /api/events/:id/audio
  * Stream the WAV clip for an event.
  */
-app.get('/api/events/:id/audio', (req, res) => {
+app.get('/api/events/:id/audio', audioFileLimiter, (req, res) => {
   const event = eventStore.getEventById(req.params.id);
   if (!event || !event.audioFile) {
     return res.status(404).json({ error: 'Audio not found' });
@@ -160,7 +171,7 @@ app.get('/api/recordings', (_req, res) => {
  * GET /api/recordings/:filename
  * Stream a continuous recording WAV file.
  */
-app.get('/api/recordings/:filename', (req, res) => {
+app.get('/api/recordings/:filename', audioFileLimiter, (req, res) => {
   const filename = path.basename(req.params.filename); // prevent path traversal
   const filePath = path.join(config.storage.recordingsDir, filename);
   if (!fs.existsSync(filePath)) {
@@ -177,6 +188,9 @@ app.get('/api/recordings/:filename', (req, res) => {
  * We use the recorder's ring buffer in practice, but keep a local buffer for
  * the pre-pad in case the recorder has not yet been started.
  */
+/** Bytes per PCM16 sample. */
+const BYTES_PER_SAMPLE = config.audio.bitDepth / 8;
+
 const PRE_PAD_BYTES = Math.floor(
   config.detection.prePadSeconds *
     config.audio.sampleRate *
@@ -246,7 +260,7 @@ function handleBarkEvent(probability, triggerChunk) {
     let audioFile = null;
     try {
       if (ringBuf.length > 0) {
-        const startSeconds = Math.max(0, ringBuf.length / (config.audio.sampleRate * config.audio.channels * 2) - totalSeconds);
+        const startSeconds = Math.max(0, ringBuf.length / (config.audio.sampleRate * config.audio.channels * BYTES_PER_SAMPLE) - totalSeconds);
         slicer.sliceBuffer(ringBuf, startSeconds, totalSeconds, clipPath);
         audioFile = clipPath;
       }
