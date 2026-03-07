@@ -1,0 +1,6 @@
+node_modules/
+recordings/*.wav
+events/*.wav
+events/events.json
+*.log
+.env
