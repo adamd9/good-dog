@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>good-dog 🐶 Bark Monitor</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <header class="header">
+    <span class="header-title">🐶 good-dog</span>
+    <span class="header-subtitle">Bark Monitoring System</span>
+    <div class="status-pill" id="status-pill">●&nbsp;Idle</div>
+  </header>
+
+  <main class="layout">
+
+    <!-- ── Left column: Live monitoring ─────────────────────────────────── -->
+    <section class="panel" id="panel-live">
+      <h2 class="panel-title">Live Monitoring</h2>
+
+      <div class="controls">
+        <button id="btn-start" class="btn btn-primary">▶ Start</button>
+        <button id="btn-stop"  class="btn btn-danger"  disabled>■ Stop</button>
+      </div>
+
+      <div class="probability-bar-wrap">
+        <label>Bark probability</label>
+        <div class="probability-bar-outer">
+          <div class="probability-bar-inner" id="prob-bar"></div>
+        </div>
+        <span id="prob-value">0.000</span>
+      </div>
+
+      <div class="threshold-wrap">
+        <label for="threshold-slider">
+          Threshold: <span id="threshold-display">0.70</span>
+        </label>
+        <input type="range" id="threshold-slider" min="0" max="1" step="0.01" value="0.70" />
+      </div>
+
+      <h3 class="section-label">Recent Detections</h3>
+      <ul id="detection-list" class="event-list"></ul>
+    </section>
+
+    <!-- ── Right column: Audio Review ───────────────────────────────────── -->
+    <section class="panel" id="panel-review">
+      <h2 class="panel-title">Audio Review</h2>
+
+      <div class="review-controls">
+        <select id="recording-select">
+          <option value="">— select a recording block —</option>
+        </select>
+        <button id="btn-load-recording" class="btn btn-secondary">Load</button>
+      </div>
+
+      <div id="recording-waveform" class="waveform-container">
+        <div class="waveform-placeholder">No recording loaded</div>
+      </div>
+      <div id="recording-timeline" class="timeline"></div>
+
+      <h3 class="section-label">Event Clips</h3>
+      <ul id="events-review-list" class="event-list"></ul>
+      <div id="clip-waveform" class="waveform-container" style="display:none">
+        <div class="waveform-close" id="clip-close">✕</div>
+        <div id="clip-ws"></div>
+        <div class="clip-controls">
+          <button id="clip-play" class="btn btn-secondary">▶ Play</button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- WaveSurfer loaded from CDN -->
+  <script src="https://unpkg.com/wavesurfer.js@7/dist/wavesurfer.min.js"></script>
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

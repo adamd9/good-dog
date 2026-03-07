@@ -1,0 +1,316 @@
+/* ──────────────────────────────────────────────────────────────────────────
+   good-dog — Bark Monitor UI  styles
+   ────────────────────────────────────────────────────────────────────────── */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --bg:        #0f172a;
+  --surface:   #1e293b;
+  --border:    #334155;
+  --accent:    #38bdf8;
+  --danger:    #f87171;
+  --success:   #4ade80;
+  --warn:      #fbbf24;
+  --text:      #e2e8f0;
+  --text-mute: #94a3b8;
+  --radius:    8px;
+  --gap:       16px;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  font-size: 14px;
+  min-height: 100vh;
+}
+
+/* ── Header ──────────────────────────────────────────────────────────────── */
+.header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 24px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+.header-title {
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.header-subtitle {
+  color: var(--text-mute);
+  font-size: 13px;
+}
+
+.status-pill {
+  margin-left: auto;
+  padding: 4px 12px;
+  border-radius: 99px;
+  font-size: 12px;
+  font-weight: 600;
+  background: var(--border);
+  color: var(--text-mute);
+  transition: background 0.3s, color 0.3s;
+}
+
+.status-pill.monitoring {
+  background: #14532d;
+  color: var(--success);
+}
+
+.status-pill.alert {
+  background: #7f1d1d;
+  color: var(--danger);
+}
+
+/* ── Layout ──────────────────────────────────────────────────────────────── */
+.layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--gap);
+  padding: var(--gap);
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+@media (max-width: 900px) {
+  .layout { grid-template-columns: 1fr; }
+}
+
+/* ── Panel ───────────────────────────────────────────────────────────────── */
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: var(--gap);
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+}
+
+.panel-title {
+  font-size: 16px;
+  font-weight: 600;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 8px;
+}
+
+.section-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-mute);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* ── Buttons ─────────────────────────────────────────────────────────────── */
+.btn {
+  padding: 6px 16px;
+  border: none;
+  border-radius: var(--radius);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.btn-primary  { background: var(--accent);   color: #0f172a; }
+.btn-danger   { background: var(--danger);   color: #0f172a; }
+.btn-secondary { background: var(--border); color: var(--text); }
+
+.controls {
+  display: flex;
+  gap: 10px;
+}
+
+/* ── Probability bar ─────────────────────────────────────────────────────── */
+.probability-bar-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.probability-bar-wrap label {
+  width: 140px;
+  flex-shrink: 0;
+  font-size: 12px;
+  color: var(--text-mute);
+}
+
+.probability-bar-outer {
+  flex: 1;
+  height: 14px;
+  background: var(--border);
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.probability-bar-inner {
+  height: 100%;
+  width: 0%;
+  background: var(--success);
+  border-radius: 99px;
+  transition: width 0.15s, background 0.15s;
+}
+
+#prob-value {
+  width: 44px;
+  text-align: right;
+  font-size: 12px;
+  color: var(--text-mute);
+}
+
+/* ── Threshold slider ────────────────────────────────────────────────────── */
+.threshold-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.threshold-wrap label {
+  font-size: 12px;
+  color: var(--text-mute);
+}
+
+input[type="range"] {
+  width: 100%;
+  accent-color: var(--accent);
+}
+
+/* ── Event list ──────────────────────────────────────────────────────────── */
+.event-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+.event-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 12px;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+.event-item:hover { border-color: var(--accent); }
+
+.event-item .prob-badge {
+  padding: 2px 8px;
+  border-radius: 99px;
+  font-weight: 700;
+  font-size: 11px;
+  background: #1e3a5f;
+  color: var(--accent);
+}
+
+.event-item .event-time {
+  color: var(--text-mute);
+  flex: 1;
+}
+
+.event-item .play-btn {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text);
+  padding: 2px 8px;
+  cursor: pointer;
+  font-size: 11px;
+}
+
+.event-item .play-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+/* ── Waveform container ──────────────────────────────────────────────────── */
+.waveform-container {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 8px;
+  min-height: 80px;
+  position: relative;
+}
+
+.waveform-placeholder {
+  color: var(--text-mute);
+  font-size: 12px;
+  text-align: center;
+  padding: 24px;
+}
+
+.waveform-close {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  cursor: pointer;
+  color: var(--text-mute);
+  font-size: 14px;
+  z-index: 10;
+}
+
+.waveform-close:hover { color: var(--danger); }
+
+/* ── Timeline (event markers) ────────────────────────────────────────────── */
+.timeline {
+  position: relative;
+  height: 24px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.timeline-marker {
+  position: absolute;
+  top: 0;
+  width: 3px;
+  height: 100%;
+  background: var(--warn);
+  border-radius: 2px;
+  transform: translateX(-50%);
+  cursor: pointer;
+}
+
+.timeline-marker:hover { background: var(--danger); }
+
+/* ── Review controls ─────────────────────────────────────────────────────── */
+.review-controls {
+  display: flex;
+  gap: 8px;
+}
+
+.review-controls select {
+  flex: 1;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  padding: 6px 8px;
+  font-size: 13px;
+}
+
+.clip-controls {
+  margin-top: 6px;
+  display: flex;
+  gap: 8px;
+}
