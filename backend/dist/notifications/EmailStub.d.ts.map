@@ -1,0 +1,1 @@
+{"version":3,"file":"EmailStub.d.ts","sourceRoot":"","sources":["../../src/notifications/EmailStub.ts"],"names":[],"mappings":"AAEA,OAAO,EAAE,mBAAmB,EAAE,gBAAgB,EAAE,MAAM,uBAAuB,CAAC;AAM9E,qBAAa,SAAU,YAAW,mBAAmB;IAC7C,MAAM,CAAC,KAAK,EAAE,gBAAgB,EAAE,OAAO,EAAE,SAAS,GAAG,OAAO,GAAG,MAAM,GAAG,OAAO,CAAC,IAAI,CAAC;CAqB5F"}
