@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.env
+*.log
+data/recordings/
+data/slices/
+*.wav
+!data/test-audio/*.wav
