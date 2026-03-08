@@ -187,7 +187,15 @@ function shutdown() {
   audioCapture.stop();
   videoCapture.stop();
   recorder.stop();
+
+  // Terminate all WebSocket connections so server.close() can complete.
+  for (const client of wss.clients) client.terminate();
+  wss.close();
+
   server.close(() => process.exit(0));
+
+  // Force-exit after 5 s if something is still hanging.
+  setTimeout(() => process.exit(1), 5000).unref();
 }
 
 // ---------------------------------------------------------------------------

@@ -14,7 +14,7 @@ import { createWriteStream, mkdirSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { randomUUID } from 'node:crypto';
-import ffmpegPath from 'ffmpeg-static';
+import { ffmpegPath } from './ffmpegResolver.js';
 import { BarkDetector } from './barkDetector.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -69,6 +69,7 @@ export class AudioCapture extends EventEmitter {
 
     this._process = spawn(ffmpegPath, args, { stdio: ['ignore', 'pipe', 'pipe'] });
 
+    let stderrTail = '';
     this._process.stdout.on('data', (chunk) => {
       this._ring.write(chunk);
       this._detector.process(chunk);
@@ -76,12 +77,15 @@ export class AudioCapture extends EventEmitter {
       this._feedPendingClips(chunk);
     });
 
-    this._process.stderr.on('data', () => { /* silence ffmpeg logs */ });
+    this._process.stderr.on('data', (d) => {
+      stderrTail = (stderrTail + d.toString()).slice(-1000);
+    });
 
     this._process.on('error', (err) => this.emit('error', err));
     this._process.on('exit', (code) => {
       if (code !== 0 && code !== null) {
-        this.emit('error', new Error(`ffmpeg audio exited with code ${code}`));
+        const hint = stderrTail ? `\nffmpeg output:\n${stderrTail.trim()}` : '';
+        this.emit('error', new Error(`ffmpeg audio exited with code ${code}${hint}`));
       }
     });
   }
@@ -253,8 +257,11 @@ function _buildInputArgs(device) {
     return ['-f', 'pulse', '-i', src];
   }
   if (platform === 'darwin') {
-    const src = device === 'default' ? ':0' : device;
-    return ['-f', 'avfoundation', '-i', src];
+    // Use none:<index> to open the audio device only.
+    // Using :<index> alone causes avfoundation to also initialise the default
+    // video device, which fails with I/O error if camera access is blocked.
+    const src = device === 'default' ? '0' : device;
+    return ['-f', 'avfoundation', '-i', `none:${src}`];
   }
   if (platform === 'win32') {
     const src = device === 'default' ? 'Microphone' : device;

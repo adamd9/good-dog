@@ -29,6 +29,7 @@ template.innerHTML = `
   .chip:hover { border-color: var(--clr-primary); color: var(--clr-primary); }
   .chip input { display: none; }
   .chip.selected { background: color-mix(in srgb, var(--clr-primary) 15%, transparent); color: var(--clr-primary); border-color: var(--clr-primary); }
+  .device-custom { display: none; margin-top: .4rem; }
 </style>
 
 <h2>⚙️ Settings</h2>
@@ -68,11 +69,13 @@ template.innerHTML = `
     </div>
     <div class="form-row">
       <label for="audio-device">Audio device</label>
-      <input type="text" id="audio-device" placeholder="default" />
+      <select id="audio-device"><option value="default">Default</option></select>
+      <input type="text" id="audio-device-custom" class="device-custom" placeholder="Enter device ID…" />
     </div>
     <div class="form-row">
       <label for="video-device">Video device</label>
-      <input type="text" id="video-device" placeholder="default" />
+      <select id="video-device"><option value="default">Default</option></select>
+      <input type="text" id="video-device-custom" class="device-custom" placeholder="Enter device ID…" />
     </div>
     <div class="form-row-inline">
       <input type="checkbox" id="video-enabled" />
@@ -162,6 +165,47 @@ class ConfigPanel extends HTMLElement {
 
     sr.getElementById('save-btn').addEventListener('click', () => this._save());
     sr.getElementById('reset-btn').addEventListener('click', () => this._reset());
+    this._wireUpDeviceSelects();
+  }
+
+  _wireUpDeviceSelects() {
+    const sr = this.shadowRoot;
+    for (const id of ['audio-device', 'video-device']) {
+      const sel    = sr.getElementById(id);
+      const custom = sr.getElementById(`${id}-custom`);
+      sel.addEventListener('change', () => {
+        custom.style.display = sel.value === '__custom__' ? '' : 'none';
+      });
+    }
+  }
+
+  _fillDeviceSelect(id, devices, savedValue) {
+    const sr     = this.shadowRoot;
+    const sel    = sr.getElementById(id);
+    const custom = sr.getElementById(`${id}-custom`);
+
+    sel.innerHTML = '';
+    for (const { id: devId, name } of devices) {
+      const opt = document.createElement('option');
+      opt.value       = devId;
+      opt.textContent = name;
+      sel.appendChild(opt);
+    }
+    const customOpt = document.createElement('option');
+    customOpt.value       = '__custom__';
+    customOpt.textContent = 'Custom…';
+    sel.appendChild(customOpt);
+
+    // Try to select the saved value
+    sel.value = savedValue;
+    if (sel.value !== savedValue) {
+      // Not in list – use custom field
+      sel.value         = '__custom__';
+      custom.value      = savedValue;
+      custom.style.display = '';
+    } else {
+      custom.style.display = 'none';
+    }
   }
 
   _syncChips() {
@@ -173,9 +217,14 @@ class ConfigPanel extends HTMLElement {
   }
 
   async _load() {
-    const res = await fetch('/api/config');
-    if (!res.ok) return;
-    const cfg = await res.json();
+    const [cfgRes, devRes] = await Promise.all([
+      fetch('/api/config'),
+      fetch('/api/devices'),
+    ]);
+    if (!cfgRes.ok) return;
+    const cfg     = await cfgRes.json();
+    const devices = devRes.ok ? await devRes.json() : { video: [], audio: [] };
+    this._devices = devices;
     this._populate(cfg);
   }
 
@@ -195,8 +244,11 @@ class ConfigPanel extends HTMLElement {
 
     setVal('segment-duration', rec.segmentDuration);
     setVal('max-age',          Math.round((rec.maxAgeSecs || 86400) / 3600));
-    setVal('audio-device',     rec.audioDevice);
-    setVal('video-device',     rec.videoDevice);
+
+    const devices = this._devices || { video: [], audio: [] };
+    this._fillDeviceSelect('audio-device', devices.audio, rec.audioDevice || 'default');
+    this._fillDeviceSelect('video-device', devices.video, rec.videoDevice || 'default');
+
     sr.getElementById('video-enabled').checked = rec.videoEnabled !== false;
 
     sr.getElementById('notif-enabled').checked = !!n.enabled;
@@ -225,8 +277,12 @@ class ConfigPanel extends HTMLElement {
       recording: {
         segmentDuration: Number(get('segment-duration').value),
         maxAgeSecs:      Number(get('max-age').value) * 3600,
-        audioDevice:     get('audio-device').value || 'default',
-        videoDevice:     get('video-device').value || 'default',
+        audioDevice:     get('audio-device').value === '__custom__'
+                           ? (get('audio-device-custom').value.trim() || 'default')
+                           : (get('audio-device').value || 'default'),
+        videoDevice:     get('video-device').value === '__custom__'
+                           ? (get('video-device-custom').value.trim() || 'default')
+                           : (get('video-device').value || 'default'),
         videoEnabled:    get('video-enabled').checked,
         audioEnabled:    true,
       },

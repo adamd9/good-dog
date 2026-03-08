@@ -9,7 +9,7 @@
 
 import { EventEmitter } from 'node:events';
 import { spawn } from 'node:child_process';
-import ffmpegPath from 'ffmpeg-static';
+import { ffmpegPath } from './ffmpegResolver.js';
 
 const JPEG_SOI = Buffer.from([0xff, 0xd8]); // JPEG start-of-image marker
 const JPEG_EOI = Buffer.from([0xff, 0xd9]); // JPEG end-of-image marker
@@ -44,17 +44,26 @@ export class VideoCapture extends EventEmitter {
 
     this._process = spawn(ffmpegPath, args, { stdio: ['ignore', 'pipe', 'pipe'] });
 
+    let stderrTail = '';
     this._process.stdout.on('data', (chunk) => {
       this._parseBuf = Buffer.concat([this._parseBuf, chunk]);
       this._parseFrames();
     });
 
-    this._process.stderr.on('data', () => { /* silence */ });
+    this._process.stderr.on('data', (d) => {
+      stderrTail = (stderrTail + d.toString()).slice(-1000);
+    });
 
     this._process.on('error', (err) => this.emit('error', err));
     this._process.on('exit', (code) => {
       if (code !== 0 && code !== null) {
-        this.emit('error', new Error(`ffmpeg video exited with code ${code}`));
+        let msg = `ffmpeg video exited with code ${code}`;
+        if (stderrTail) msg += `\nffmpeg output:\n${stderrTail.trim()}`;
+        if (process.platform === 'darwin' && stderrTail.includes('Input/output error')) {
+          msg += '\n\nHint: On macOS, grant Camera access to your terminal app at\n' +
+                 'System Settings → Privacy & Security → Camera.';
+        }
+        this.emit('error', new Error(msg));
       }
     });
   }
@@ -98,7 +107,16 @@ function _buildVideoInputArgs(device, frameRate, resolution) {
   }
   if (platform === 'darwin') {
     const src = device === 'default' ? '0' : device;
-    return ['-f', 'avfoundation', '-framerate', String(frameRate), '-video_size', resolution, '-i', src];
+    // AVFoundation requires the exact device framerate at input time.
+    // The device reports a range [15–30] fps; we capture at 30 (the max)
+    // and decimate to the desired rate via an output fps filter.
+    const [w, h] = resolution.split('x');
+    return [
+      '-f', 'avfoundation',
+      '-framerate', '30',
+      '-i', src,
+      '-vf', `scale=${w}:${h},fps=${frameRate}`,
+    ];
   }
   if (platform === 'win32') {
     const src = device === 'default' ? 'video=Integrated Camera' : device;

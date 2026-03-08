@@ -1,11 +1,6 @@
 node_modules/
-data/recordings/*.mp4
-data/recordings/*.mkv
-data/recordings/*.avi
-data/recordings/*.wav
-data/recordings/*.mp3
-data/events/*.wav
-data/events/*.mp4
+data/recordings/
+data/events/
 data/config.json
 data/good-dog.db
 *.log
