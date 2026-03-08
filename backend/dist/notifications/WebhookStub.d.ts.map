@@ -1,1 +1,0 @@
-{"version":3,"file":"WebhookStub.d.ts","sourceRoot":"","sources":["../../src/notifications/WebhookStub.ts"],"names":[],"mappings":"AACA,OAAO,EAAE,mBAAmB,EAAE,gBAAgB,EAAE,MAAM,uBAAuB,CAAC;AAK9E,qBAAa,WAAY,YAAW,mBAAmB;IAC/C,MAAM,CAAC,KAAK,EAAE,gBAAgB,EAAE,OAAO,EAAE,SAAS,GAAG,OAAO,GAAG,MAAM,GAAG,OAAO,CAAC,IAAI,CAAC;CAO5F"}
