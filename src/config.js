@@ -49,7 +49,7 @@ export function loadConfig() {
   try {
     const raw = readFileSync(CONFIG_PATH, 'utf-8');
     const saved = JSON.parse(raw);
-    return mergeDeep(structuredClone(DEFAULTS), saved);
+    return mergeConfig(DEFAULTS, saved);
   } catch {
     return structuredClone(DEFAULTS);
   }
@@ -93,27 +93,43 @@ export function validateConfig(config) {
   }
 }
 
-function mergeDeep(target, source) {
-  const UNSAFE = new Set(['__proto__', 'constructor', 'prototype']);
-  for (const key of Object.keys(source)) {
-    if (UNSAFE.has(key)) continue; // guard against prototype pollution
-    if (
-      source[key] !== null &&
-      typeof source[key] === 'object' &&
-      !Array.isArray(source[key]) &&
-      target[key] !== null &&
-      typeof target[key] === 'object'
-    ) {
-      mergeDeep(target[key], source[key]);
-    } else {
-      // Use Object.defineProperty to avoid [[Set]]-based prototype pollution
-      Object.defineProperty(target, key, {
-        value:        source[key],
-        writable:     true,
-        configurable: true,
-        enumerable:   true,
-      });
+/**
+ * Merge a saved config with DEFAULTS using a strict key whitelist.
+ * Only known keys from each section are copied, preventing prototype pollution.
+ */
+function mergeConfig(defaults, saved) {
+  if (!saved || typeof saved !== 'object') return structuredClone(defaults);
+
+  return {
+    detection: mergeSection(defaults.detection, saved.detection, [
+      'threshold', 'minDuration', 'beforeBuffer', 'afterBuffer',
+    ]),
+    recording: mergeSection(defaults.recording, saved.recording, [
+      'segmentDuration', 'maxAgeSecs', 'videoDevice', 'audioDevice',
+      'videoEnabled', 'audioEnabled', 'frameRate', 'resolution',
+    ]),
+    server: mergeSection(defaults.server, saved.server, [
+      'port', 'host',
+    ]),
+    notification: mergeSection(defaults.notification, saved.notification, [
+      'enabled', 'type', 'endpoint', 'minProbability', 'cooldownSecs',
+    ]),
+  };
+}
+
+/**
+ * Copy only whitelisted own-property keys from `overrides` into a clone of `defaults`.
+ * @param {object} defaults
+ * @param {object|undefined} overrides
+ * @param {string[]} allowedKeys
+ */
+function mergeSection(defaults, overrides, allowedKeys) {
+  const result = { ...defaults };
+  if (!overrides || typeof overrides !== 'object') return result;
+  for (const key of allowedKeys) {
+    if (Object.prototype.hasOwnProperty.call(overrides, key) && overrides[key] !== undefined) {
+      result[key] = overrides[key];
     }
   }
-  return target;
+  return result;
 }
