@@ -26,7 +26,7 @@ export const DEFAULTS = {
     audioDevice: 'default',
     videoEnabled: true,
     audioEnabled: true,
-    frameRate: 15,
+    frameRate: 30,
     resolution: '640x480',
   },
   server: {

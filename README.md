@@ -42,6 +42,24 @@ Then open **http://localhost:3000** in your browser.
 
 ---
 
+## Remote access (ngrok)
+
+To expose the UI publicly over the internet, start the server first and then run ngrok **in a separate terminal**:
+
+```bash
+# Terminal 1 – start the server
+npm run dev
+
+# Terminal 2 – expose it via ngrok
+npm run ngrok
+```
+
+ngrok will print a public `https://` URL you can open from anywhere.
+
+> **Note:** The free ngrok plan allows only one simultaneous agent session. Make sure no other ngrok processes are running before executing `npm run ngrok`. You can check with `pkill -f ngrok` to clean up any stale sessions.
+
+---
+
 ## Configuration
 
 Settings can be changed at any time from the **⚙️ Settings** tab in the UI, or by editing `data/config.json` directly.
