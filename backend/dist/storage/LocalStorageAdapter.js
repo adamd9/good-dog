@@ -12,7 +12,14 @@ class LocalStorageAdapter {
         this.basePath = basePath;
     }
     resolve(relativePath) {
-        return path_1.default.join(this.basePath, relativePath);
+        const normalised = path_1.default.normalize(relativePath);
+        // Prevent path traversal: ensure the resolved path stays inside basePath
+        const fullPath = path_1.default.join(this.basePath, normalised);
+        if (!fullPath.startsWith(path_1.default.resolve(this.basePath) + path_1.default.sep) &&
+            fullPath !== path_1.default.resolve(this.basePath)) {
+            throw new Error(`Path traversal attempt detected: ${relativePath}`);
+        }
+        return fullPath;
     }
     async saveFile(relativePath, data) {
         const fullPath = this.resolve(relativePath);

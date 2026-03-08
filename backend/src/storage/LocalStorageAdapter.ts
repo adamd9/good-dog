@@ -11,7 +11,14 @@ export class LocalStorageAdapter implements StorageAdapter {
   }
 
   private resolve(relativePath: string): string {
-    return path.join(this.basePath, relativePath);
+    const normalised = path.normalize(relativePath);
+    // Prevent path traversal: ensure the resolved path stays inside basePath
+    const fullPath = path.join(this.basePath, normalised);
+    if (!fullPath.startsWith(path.resolve(this.basePath) + path.sep) &&
+        fullPath !== path.resolve(this.basePath)) {
+      throw new Error(`Path traversal attempt detected: ${relativePath}`);
+    }
+    return fullPath;
   }
 
   async saveFile(relativePath: string, data: Buffer): Promise<string> {

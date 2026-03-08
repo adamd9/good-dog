@@ -43,6 +43,25 @@ exports.app.use('/api/detectors', detectors_1.default);
 exports.app.use('/api/events', events_1.default);
 exports.app.use('/api/recordings', recordings_1.default);
 exports.app.use('/api/config', config_2.default);
+// Protected file serving for audio/video slices
+// Path must be validated against storage root to prevent traversal
+exports.app.get('/files/*', auth_1.apiKeyMiddleware, (req, res) => {
+    const path = require('path');
+    const fs = require('fs');
+    const relativePath = req.params[0];
+    // Normalise and ensure it stays within storage root
+    const storagePath = path.resolve(config_1.config.storagePath);
+    const fullPath = path.normalize(path.join(storagePath, relativePath));
+    if (!fullPath.startsWith(storagePath + path.sep) && fullPath !== storagePath) {
+        res.status(400).json({ error: 'Invalid path' });
+        return;
+    }
+    if (!fs.existsSync(fullPath)) {
+        res.status(404).json({ error: 'File not found' });
+        return;
+    }
+    res.sendFile(fullPath);
+});
 // Error handler
 exports.app.use((err, _req, res, _next) => {
     logger.error({ err }, 'Unhandled error');

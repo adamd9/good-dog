@@ -46,6 +46,26 @@ app.use('/api/events', eventsRouter);
 app.use('/api/recordings', recordingsRouter);
 app.use('/api/config', configRouter);
 
+// Protected file serving for audio/video slices
+// Path must be validated against storage root to prevent traversal
+app.get('/files/*', apiKeyMiddleware, (req: Request, res: Response) => {
+  const path = require('path') as typeof import('path');
+  const fs = require('fs') as typeof import('fs');
+  const relativePath = req.params[0] as string;
+  // Normalise and ensure it stays within storage root
+  const storagePath = path.resolve(config.storagePath);
+  const fullPath = path.normalize(path.join(storagePath, relativePath));
+  if (!fullPath.startsWith(storagePath + path.sep) && fullPath !== storagePath) {
+    res.status(400).json({ error: 'Invalid path' });
+    return;
+  }
+  if (!fs.existsSync(fullPath)) {
+    res.status(404).json({ error: 'File not found' });
+    return;
+  }
+  res.sendFile(fullPath);
+});
+
 // Error handler
 app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
   logger.error({ err }, 'Unhandled error');
