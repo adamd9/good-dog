@@ -57,7 +57,7 @@ function initSchema(db) {
       id          TEXT PRIMARY KEY,
       startTime   INTEGER NOT NULL,
       endTime     INTEGER,
-      audioFile   TEXT    NOT NULL,
+      audioFile   TEXT,
       videoFile   TEXT,
       sizeBytes   INTEGER NOT NULL DEFAULT 0
     );

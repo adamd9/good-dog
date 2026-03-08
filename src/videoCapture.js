@@ -87,7 +87,10 @@ export class VideoCapture extends EventEmitter {
       const text = d.toString();
       stderrTail = (stderrTail + text).slice(-2000);
       stderrFull = (stderrFull + text).slice(-12000);
-      process.stderr.write(`[video:ffmpeg] ${text}`);
+      // Suppress noisy ffmpeg progress lines (frame=… fps=… size=… time=…)
+      if (!/^\s*frame=/.test(text)) {
+        process.stderr.write(`[video:ffmpeg] ${text}`);
+      }
     });
 
     this._process.on('error', (err) => this.emit('error', err));
