@@ -1,0 +1,69 @@
+version: '3.9'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: gooddog
+      POSTGRES_USER: gooddog
+      POSTGRES_PASSWORD: gooddog
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U gooddog"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    environment:
+      PORT: 4000
+      DATABASE_URL: postgresql://gooddog:gooddog@postgres:5432/gooddog
+      STORAGE_PATH: /data
+      PRE_BUFFER_SECONDS: "3"
+      POST_BUFFER_SECONDS: "5"
+      DETECTOR_DEFAULT_THRESHOLD: "0.6"
+      API_KEY: changeme
+      LOG_LEVEL: info
+      RETENTION_DAYS: "7"
+    ports:
+      - "4000:4000"
+    volumes:
+      - recordings_data:/data
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    environment:
+      VITE_API_URL: http://localhost:4000
+      VITE_API_KEY: changeme
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
+  minio_data:
+  recordings_data:
