@@ -255,7 +255,7 @@ class ConfigPanel extends HTMLElement {
 
   async _reset() {
     if (!confirm('Reset all settings to defaults?')) return;
-    // POST an empty object – the server will merge with defaults
+    // PUT an empty object – the server will merge with defaults
     const res = await fetch('/api/config', {
       method:  'PUT',
       headers: { 'Content-Type': 'application/json' },

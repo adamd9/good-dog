@@ -94,7 +94,9 @@ export function validateConfig(config) {
 }
 
 function mergeDeep(target, source) {
+  const UNSAFE = new Set(['__proto__', 'constructor', 'prototype']);
   for (const key of Object.keys(source)) {
+    if (UNSAFE.has(key)) continue; // guard against prototype pollution
     if (
       source[key] !== null &&
       typeof source[key] === 'object' &&
@@ -104,7 +106,13 @@ function mergeDeep(target, source) {
     ) {
       mergeDeep(target[key], source[key]);
     } else {
-      target[key] = source[key];
+      // Use Object.defineProperty to avoid [[Set]]-based prototype pollution
+      Object.defineProperty(target, key, {
+        value:        source[key],
+        writable:     true,
+        configurable: true,
+        enumerable:   true,
+      });
     }
   }
   return target;

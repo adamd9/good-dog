@@ -9,7 +9,7 @@
  * Respects a cooldown period to avoid notification storms.
  */
 
-import { loadConfig } from './config.js';
+import { loadConfig, DEFAULTS } from './config.js';
 
 let _lastNotified = 0;
 
@@ -23,9 +23,9 @@ export async function maybeNotify(event) {
   const n = config.notification;
 
   if (!n.enabled) return;
-  if (event.probability < (n.minProbability ?? 0.7)) return;
+  if (event.probability < (n.minProbability ?? DEFAULTS.notification.minProbability)) return;
 
-  const cooldownMs = (n.cooldownSecs ?? 30) * 1000;
+  const cooldownMs = (n.cooldownSecs ?? DEFAULTS.notification.cooldownSecs) * 1000;
   if (Date.now() - _lastNotified < cooldownMs) return;
 
   _lastNotified = Date.now();

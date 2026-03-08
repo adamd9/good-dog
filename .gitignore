@@ -7,5 +7,6 @@ data/recordings/*.mp3
 data/events/*.wav
 data/events/*.mp4
 data/config.json
+data/good-dog.db
 *.log
 .DS_Store
